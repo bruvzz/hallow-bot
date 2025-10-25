@@ -17,6 +17,7 @@ function addCandy(userId, amount) {
   if (!candyData[userId]) candyData[userId] = { candy: 0, inviteCounter: 0 };
   candyData[userId].candy += amount;
   saveCandy(candyData);
+  return candyData[userId].candy;
 }
 
 function getCandy(userId) {
@@ -27,19 +28,25 @@ function getCandy(userId) {
 function addInvite(userId) {
   const candyData = loadCandy();
   if (!candyData[userId]) candyData[userId] = { candy: 0, inviteCounter: 0 };
-  
+
   candyData[userId].inviteCounter = (candyData[userId].inviteCounter || 0) + 1;
 
-  let candyRewarded = 0;
+  candyData[userId].candy += 1;
+
+  let bonusCandy = 0;
 
   if (candyData[userId].inviteCounter >= 5) {
     candyData[userId].candy += 5;
     candyData[userId].inviteCounter -= 5;
-    candyRewarded = 5;
+    bonusCandy = 5;
   }
 
   saveCandy(candyData);
-  return candyRewarded;
+  return bonusCandy;
 }
 
-module.exports = { addCandy, getCandy, addInvite };
+module.exports = { 
+  addCandy, 
+  getCandy, 
+  addInvite, 
+};
