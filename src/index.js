@@ -6,6 +6,7 @@ const {
 const chalk = require("chalk");
 const dayjs = require("dayjs");
 const eventHandler = require("./handlers/eventHandler");
+const levelHelper = require("./commands/levelHelper");
 
 const timestamp = () => chalk.gray(`[${dayjs().format("HH:mm:ss")}]`);
 
@@ -66,6 +67,18 @@ client.on("messageCreate", async (message) => {
     await message.reply(
       `${message.author} - There will never be prefixes, fuckass boy.`
     );
+  }
+
+  try {
+    const { leveledUp, currentLevel } = levelHelper.addXP(message.author.id);
+
+    if (leveledUp) {
+      message.channel.send(
+        `🎉 ${message.author} has leveled up! They are now **Level ${currentLevel}**!`
+      );
+    }
+  } catch (err) {
+    console.error(`${timestamp()} ⚠️ Failed to add XP for ${message.author.id}:`, err);
   }
 });
 
