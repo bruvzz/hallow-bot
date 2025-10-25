@@ -1,20 +1,37 @@
+const fs = require("fs");
 const path = require("path");
-const getAllFiles = require("../utils/getAllFiles");
 
 module.exports = (client) => {
-  const eventFolders = getAllFiles(path.join(__dirname, "..", "events"), true);
+  const eventsPath = path.join(__dirname, "..");
+  const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith(".js"));
 
-  for (const eventFolder of eventFolders) {
-    let eventFiles = getAllFiles(eventFolder);
-    eventFiles = eventFiles.sort();
+  for (const file of eventFiles) {
+    const event = require(path.join(eventsPath, file));
 
-    const eventName = eventFolder.replace(/\\/g, "/").split("/").pop();
+    if (event.name && typeof event.callback === "function") {
+      client.on(event.name, (...args) => event.callback(client, ...args));
+      console.log(`✅ Loaded event: ${event.name}`);
+    } else {
+      console.log(`⚠️ Skipping non-event file: ${file}`);
+    }
+  }
 
-    client.on(eventName, async (arg) => {
-      for (const eventFile of eventFiles) {
-        const eventFunction = require(eventFile);
-        await eventFunction(client, arg);
+  const folders = fs.readdirSync(eventsPath, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+
+  for (const folder of folders) {
+    const folderPath = path.join(eventsPath, folder);
+    const folderFiles = fs.readdirSync(folderPath).filter(file => file.endsWith(".js"));
+
+    for (const file of folderFiles) {
+      const event = require(path.join(folderPath, file));
+      if (event.name && typeof event.callback === "function") {
+        client.on(event.name, (...args) => event.callback(client, ...args));
+        console.log(`✅ Loaded event: ${event.name}`);
+      } else {
+        console.log(`⚠️ Skipping non-event file: ${folder}/${file}`);
       }
-    });
+    }
   }
 };
